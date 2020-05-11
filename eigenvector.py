@@ -239,23 +239,26 @@ def print_matrix(A):
     str_val += "}"
     print(str_val)
 
-# A = np.matrix([[1,0,1, 0],[0,0,0,1], [1,0,1,1],[0,1,1,1]])
-# print("A: ", A)
-#print(multiply_matrix(A, 1))
-# print(find_largest_evect(A))
-# v = np.matrix([[1], [2], [3]])
-# print("v: \n", v)
-# lambda_v = np.matrix([[3], [6], [9]])
-# print("lambda_v: \n", lambda_v)
-# print(eigenvector_check(v, lambda_v))
 
-A = make_symmetric_matrix(2, 1, 10)
-m = 50
-v = np.matrix([[3],[7]])
-print("e-vector: \n", compute_largest_eigenvector(A, m, v))
-print_matrix(A)
+if __name__ == "__main__":
 
-# z = float("-inf")
-# A = np.matrix([[0],[1]])
-# print("A: \n", A)
-# print("max_index_val: ", max_index_val(A))
+    # A = np.matrix([[1,0,1, 0],[0,0,0,1], [1,0,1,1],[0,1,1,1]])
+    # print("A: ", A)
+    #print(multiply_matrix(A, 1))
+    # print(find_largest_evect(A))
+    # v = np.matrix([[1], [2], [3]])
+    # print("v: \n", v)
+    # lambda_v = np.matrix([[3], [6], [9]])
+    # print("lambda_v: \n", lambda_v)
+    # print(eigenvector_check(v, lambda_v))
+
+    A = make_symmetric_matrix(2, 1, 10)
+    m = 50
+    v = np.matrix([[3],[7]])
+    print("e-vector: \n", compute_largest_eigenvector(A, m, v))
+    print_matrix(A)
+
+    # z = float("-inf")
+    # A = np.matrix([[0],[1]])
+    # print("A: \n", A)
+    # print("max_index_val: ", max_index_val(A))
