@@ -87,9 +87,10 @@ def control_flow(image, e):
     A = ic.import_img(image, True)
     B = np_mx_convert(A)
     A_approx = svd_approx(B, e)
-    ic.display_img(A_approx)
+    A_approx = A_approx / 256
+    ic.display_img(A_approx, False)
     return A_approx
 
 if __name__ == "__main__":
-    A_approx = control_flow('test1.png', 675)
+    A_approx = control_flow('test1.png', 10)
     print(A_approx)
