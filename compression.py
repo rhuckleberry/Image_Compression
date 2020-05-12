@@ -1,4 +1,5 @@
 import numpy as np
+import image_conversion as ic
 import math
 import eigenvector as evect
 
@@ -44,12 +45,47 @@ def svd_approx(A, e):
         u_i = u[:,i]
         vh_i = vh[i, :]
 
+        print("s_i: ", s_i, "\n")
+        print("u_i: ", u_i.shape, "\n")
+        print("vh_i: ", vh_i.shape, "\n")
+
         A_approx += s_i*u_i*vh_i
 
     return A_approx
 
+# def np_mx_convert(A):
+#     """
+#     prints matrix A in numpy form
+#
+#     Input:
+#     A - an mxn matrix in OpenCV form
+#
+#     Output: None (printed matrix)
+#     """
+#     dim = A.shape
+#     m = dim[0]
+#     n = dim[1]
+#
+#     str_val = "["
+#     for i in range(m):
+#         str_val += "["
+#         for j in range(n):
+#             a = int(A[i,j])
+#             str_val += str(a)
+#             if j != n-1:
+#                 str_val += ","
+#
+#         str_val += "]"
+#         if i != m-1:
+#             str_val += ","
+#
+#     str_val += "]"
+#     print(str_val)
+
 if __name__ == "__main__":
-    A = np.matrix([[1,2,3], [4,5,6], [7,8,9]])
-    e = 1
+    # A = np.matrix([[1,2], [4,5], [8,9]])
+    A = ic.import_img('test1.png', True)
+    print(A)
+    e = 2
     A_approx = svd_approx(A, e)
     print(A_approx)

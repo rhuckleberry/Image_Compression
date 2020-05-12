@@ -12,7 +12,7 @@ def import_img(path, is_grayscale):
     else:
         return cv2.imread(path, cv2.IMREAD_COLOR)
 
-def display_img(img_matrix)
+def display_img(img_matrix):
 ### Displays the Image
     cv2.imshow('Image', img_matrix)
 
