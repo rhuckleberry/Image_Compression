@@ -66,7 +66,7 @@ def combine_channels(red_channel, green_channel, blue_channel):
         return
     output = np.zeros((red_channel.shape[0], red_channel.shape[1], 3))
     output[:,:,0] = blue_channel
-    # output[:,:,1] = green_channel
+    output[:,:,1] = green_channel
     output[:,:,2] = red_channel
     return output
 
