@@ -15,7 +15,7 @@ def import_img(path, is_grayscale):
     if is_grayscale:
         return cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     else:
-        return cv2.imread(path, cv2.IMREAD_UNCHANGED)
+        return cv2.imread(path, cv2.IMREAD_COLOR)
 
 
 def display_img(img_matrix, is_color):
@@ -50,6 +50,27 @@ def select_color_channel(input_matrix, channel_num, is_grayscale):
         return img
 
 
+def combine_channels(red_channel, green_channel, blue_channel):
+    """
+    Takes in three single channel images and combines into a color image
+
+    INPUT:
+    red_channel - single channel corresponding to the red output channel
+    blue_channel - single channel corresponding to the blue output channel
+    green_channel - single channel corresponding to the green output channel
+
+    OUTPUT - CV matrix corresponding to a color image
+    """
+    if red_channel.shape != green_channel.shape or red_channel.shape != blue_channel.shape:
+        print("Channel combination error: channel dimensions do not match")
+        return
+    output = np.zeros((red_channel.shape[0], red_channel.shape[1], 3))
+    output[:,:,0] = blue_channel
+    # output[:,:,1] = green_channel
+    output[:,:,2] = red_channel
+    return output
+
+
 if __name__ == "__main__":
     # Get matrix
     matrix = import_img('test1.png', False)
@@ -61,13 +82,20 @@ if __name__ == "__main__":
 
     #Show Image
 
-    img = select_color_channel(matrix,1,False)
-    print(img)
+    # img = select_color_channel(matrix,1,False)
+    # print(img)
     # display_img(img, True)
-    cv2.imshow("image1", select_color_channel(matrix, 0, False)/255)
-    cv2.imshow("image2", select_color_channel(matrix, 1, False)/255)
-    cv2.imshow("image3", select_color_channel(matrix, 2, False)/255)
+#    cv2.imshow("image1", select_color_channel(matrix, 0, False)/256)
+#    cv2.imshow("image2", select_color_channel(matrix, 1, False)/256)
+#    cv2.imshow("image3", select_color_channel(matrix, 2, False)/256)
 
+    red = select_color_channel(matrix, 2, True)
+    green = select_color_channel(matrix, 1, True)
+    blue = select_color_channel(matrix, 0, True)
+
+    reconstructed = combine_channels(red/256, green/256, blue/256)
+
+    cv2.imshow("image", reconstructed)
 
 
     cv2.waitKey(0)
