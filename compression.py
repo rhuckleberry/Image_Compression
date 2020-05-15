@@ -4,53 +4,6 @@ import math
 import eigenvector as evect
 import cv2
 
-def svd_approx(A, e):
-    """
-    Returns an approximation, A_approx, of A based on the singular value
-    decomposition of A and e of A's eigenvalues
-
-    Input:
-    A - an input mxn matrix
-    e - an integer between (0 <= e <= #eigenvalues of A) that will be the number
-        of eigenvalues that A_approx will use to approximate A
-
-    Ouput:
-    A_approx - a singular value decomposition approximation of A using e
-                eigenvalues
-
-                ~If m is not in bounds returns empty matrix with dimensions of A
-    """
-    u, s, vh = np.linalg.svd(A)
-    #s is a list of squarerooted eigenvalues
-    #u is a matrix of eigenvectors of [A][A^t]
-    #vh is a matrix of transposed eigenvectors of [A^t][A]
-
-    print("u: ", u, "\n")
-    print("s: ", s, "\n")
-    print("vh: ", vh, "\n")
-    print(s.shape)
-
-    m, n = A.shape #gets dimension sizes of A
-    A_approx = np.zeros((m, n)) #creates zero matrix in dimension size of A
-
-    if e > s.size:
-        print("*Error: Trying to approximate with more eigenvalues than A has!*")
-        return A_approx
-
-    # singular value approximation of A by calculating the summation formula:
-    # A = Σ i=1 to n (sqrt(lamdai)* ui * (vi)^T)
-    # s_i = sqrt(lamdai)
-    # u_i = ui
-    # v_i = (vi)^T
-    for i in range(e): #summation formula added to initial zero matrix
-        s_i = s[i]
-        u_i = u[:,i]
-        vh_i = vh[i, :]
-
-        A_approx += s_i*u_i*vh_i
-
-    return A_approx
-
 def np_mx_convert(A):
     """
     prints matrix A in numpy form
@@ -70,6 +23,105 @@ def np_mx_convert(A):
 
     B = np.matrix(A)
     return B
+
+def compress_data(A, e):
+    """
+    Returns compressed data of A in form of eigenvals, u_vects and v_vects
+
+    Input:
+    A - an input mxn matrix
+    e - an integer between (0 <= e <= #eigenvalues of A) that will be the number
+        of eigenvalues that A_approx will use to approximate A
+
+    Ouput: tuple of the following
+    eigenvals - eigenvalues of svd matrix A
+    u_vects -  subset of u vectors where u = [A][A^t]
+    v_vects - subset of v vectors where v = [A^t][A]
+    """
+    u, s, vh = np.linalg.svd(A)
+    #s is a list of squarerooted eigenvalues
+    #u is a matrix of eigenvectors of [A][A^t]
+    #vh is a matrix of transposed eigenvectors of [A^t][A]
+
+    if e > s.size:
+        print("*Error: Trying to approximate with more eigenvalues than A has!*")
+        return A_approx
+
+    eigenvals =[]
+    u_vects =[]
+    v_vects = []
+
+    for i in range(e):
+        s_i = s[i]
+        u_i = u[:,i]
+        vh_i = vh[i, :]
+
+        eigenvals.append(s_i)
+        u_vects.append(u_i)
+        v_vects.append(vh_i)
+
+    return (eigenvals, u_vects, v_vects)
+
+def form_approximation(A, eigenvals, u_vects, v_vects):
+    """
+    Returns an approximation, A_approx, of A based on the singular value
+    decomposition of A and e of A's eigenvalues
+
+    Input:
+    A - an input mxn matrix
+    eigenvals - eigenvalues of svd matrix A
+    u_vects -  subset of u vectors where u = [A][A^t]
+    v_vects - subset of v vectors where v = [A^t][A]
+
+    Output:
+    A_approx - approximate matrix of A based on compressed data
+    """
+
+    m, n = A.shape #gets dimension sizes of A
+    A_approx = np.zeros((m, n)) #creates zero matrix in dimension size of A
+
+    data_length = len(eigenvals)
+
+    if data_length == len(u_vects) and data_length == len(v_vects):
+
+        # singular value approximation of A by calculating the summation formula:
+        # A = Σ i=1 to n (sqrt(lamdai)* ui * (vi)^T)
+        # s_i = sqrt(lamdai)
+        # u_i = ui
+        # v_i = (vi)^T
+        for i in range(data_length): #summation formula added to initial zero matrix
+            s_i = eigenvals[i]
+            u_i = u_vects[i]
+            vh_i = v_vects[i]
+
+            A_approx += s_i*u_i*vh_i
+
+        return A_approx
+
+    else:
+        print("Error: compression data not of the same length")
+        return
+
+def svd_approx(A, e):
+    """
+    Returns an approximation, A_approx, of A based on the singular value
+    decomposition of A and e of A's eigenvalues
+
+    Input:
+    A - an input mxn matrix
+    e - an integer between (0 <= e <= #eigenvalues of A) that will be the number
+        of eigenvalues that A_approx will use to approximate A
+
+    Ouput:
+    A_approx - a singular value decomposition approximation of A using e
+                eigenvalues
+
+                ~If m is not in bounds returns empty matrix with dimensions of A
+    """
+    (eigenvals, u_vects, v_vects) = compress_data(A, e)
+    A_approx = form_approximation(A, eigenvals, u_vects, v_vects)
+
+    return A_approx
 
 def control_flow(image, e):
     """
@@ -128,5 +180,16 @@ def control_flow_color(image, e):
 
 
 if __name__ == "__main__":
-    A_approx = control_flow_color('test1.png', 20)
+    #greyscale image
+    A = ic.import_img('test1.png', True)
+    B = np_mx_convert(A)
+    (eigenvals, u_vects, v_vects) = compress_data(B, 100)
+    #compressed data = (eigenvals, u_vects, v_vects)
+    A_approx = form_approximation(A, eigenvals, u_vects, v_vects)
+    #Matrix Approximation = A_approx
+    print(A_approx)
+    ic.display_img(A_approx, True)
+
+    #color image
+    A_approx = control_flow_color('test1.png', 50)
     print(A_approx)
