@@ -3,6 +3,7 @@ import image_conversion as ic
 import math
 import eigenvector as evect
 import cv2
+import Image_comparison as comparison
 
 def np_mx_convert(A):
     """
@@ -24,7 +25,7 @@ def np_mx_convert(A):
     B = np.matrix(A)
     return B
 
-def compress_data(A, e):
+def compress_data(A, e, isAll = False):
     """
     Returns compressed data of A in form of eigenvals, u_vects and v_vects
 
@@ -32,11 +33,13 @@ def compress_data(A, e):
     A - an input mxn matrix
     e - an integer between (0 <= e <= #eigenvalues of A) that will be the number
         of eigenvalues that A_approx will use to approximate A
+    isAll - boolean: if True, return all eigenvals, u_vect, v_vect
+                     if False, return e of the eigenvals, u_vect, v_vect
 
     Ouput: tuple of the following
-    eigenvals - eigenvalues of svd matrix A
-    u_vects -  subset of u vectors where u = [A][A^t]
-    v_vects - subset of v vectors where v = [A^t][A]
+    eigenvals - list of eigenvalues of svd matrix A
+    u_vects -  list subset of u vectors where u = [A][A^t]
+    v_vects - list subset of v vectors where v = [A^t][A]
     """
     u, s, vh = np.linalg.svd(A)
     #s is a list of squarerooted eigenvalues
@@ -50,8 +53,14 @@ def compress_data(A, e):
     eigenvals =[]
     u_vects =[]
     v_vects = []
+    max_val = 0
 
-    for i in range(e):
+    if isAll:
+        max_val = len(s) #want all e-vals & e-vects in list form
+    else:
+        max_val = e
+
+    for i in range(max_val):
         s_i = s[i]
         u_i = u[:,i]
         vh_i = vh[i, :]
@@ -123,6 +132,66 @@ def svd_approx(A, e):
 
     return A_approx
 
+def best_approximation(image, error_bound):
+    """
+    Gives data compression values for A_approx such that A_approx is lower
+    bounded in data compression accuracy by error_bound
+
+    Input:
+    image - filename of an png image ex: 'test2.png'
+        ~A is the corresponding matrix of image
+    error_bound - a positive MSE value between A and A_approx that A_approx
+                must satisfy
+
+    Ouput: compressed_data -- tuple of the following
+    eigenvals - eigenvalues of svd matrix A
+    u_vects -  subset of u vectors where u = [A][A^t]
+    v_vects - subset of v vectors where v = [A^t][A]
+    """
+
+    #matrix initialization
+    A = ic.import_img(image, True)
+    B = np_mx_convert(A)
+    current_MSE = float("inf")
+
+    #save all eigenvals and take subsets
+    (all_eigenvals, all_u_vects, all_v_vects) = compress_data(B, 0, True)
+    (eigenvals, u_vects, v_vects) = ([], [], [])
+
+    #e values and bounds
+    min_e = 0
+    max_e = len(all_eigenvals) #max possible value for e
+    last_e = -1 #cant be same as any other e value
+    current_e = math.ceil((min_e + max_e) / 2)
+
+    #binary search style
+    while last_e != current_e:
+        print("current_e: ", current_e, "last_e: ", last_e)
+        print("min_e: ", min_e, "max_e: ", max_e)
+        #find MSE of approximation with e
+        (eigenvals, u_vects, v_vects) = (all_eigenvals[:current_e],\
+                                            all_u_vects[:current_e], \
+                                            all_v_vects[:current_e])
+        A_approx = form_approximation(B, eigenvals, u_vects, v_vects)
+        current_MSE = comparison.mse_comparison(B, A_approx)
+
+        #update min_e, max_e bounds
+        if current_MSE == error_bound:
+            return (eigenvals, u_vects, v_vects)
+        elif current_MSE > error_bound:
+            print("bigger MSE")
+            min_e = current_e
+        else: #current_MSE < error_bound
+            print("smaller MSE")
+            max_e = current_e
+
+        last_e = current_e
+        current_e = math.ceil((min_e + max_e) / 2) #ceiled average of max and min
+        print(current_MSE)
+
+    print(current_e)
+    return (eigenvals, u_vects, v_vects)
+
 def control_flow(image, e):
     """
     Takes a matrix in CV2 form and approximates it with singular value decomposition
@@ -180,16 +249,20 @@ def control_flow_color(image, e):
 
 
 if __name__ == "__main__":
-    #greyscale image
-    A = ic.import_img('test1.png', True)
-    B = np_mx_convert(A)
-    (eigenvals, u_vects, v_vects) = compress_data(B, 100)
-    #compressed data = (eigenvals, u_vects, v_vects)
-    A_approx = form_approximation(A, eigenvals, u_vects, v_vects)
-    #Matrix Approximation = A_approx
-    print(A_approx)
-    ic.display_img(A_approx, True)
+    # #greyscale image
+    # A = ic.import_img('test1.png', True)
+    # B = np_mx_convert(A)
+    # (eigenvals, u_vects, v_vects) = compress_data(B, 100)
+    # #compressed data = (eigenvals, u_vects, v_vects)
+    # A_approx = form_approximation(A, eigenvals, u_vects, v_vects)
+    # #Matrix Approximation = A_approx
+    # print(A_approx)
+    # ic.display_img(A_approx, True)
 
-    #color image
-    A_approx = control_flow_color('test1.png', 50)
-    print(A_approx)
+    #best approximation
+    error_bound = 2
+    (eigenvals, u_vects, v_vects) = best_approximation('test1.png', error_bound)
+
+    # #color image
+    # A_approx = control_flow_color('test1.png', 50)
+    # print(A_approx)
